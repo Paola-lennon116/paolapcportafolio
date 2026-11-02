@@ -17,7 +17,8 @@ export const Route = createFileRoute("/api/public/contact")({
           return Response.json({ error: "invalid_input" }, { status: 400 });
         }
         // Email delivery is enabled once the sender domain is configured.
-        return Response.json({ error: "email_not_configured" }, { status: 503 });
+        // Until then, report a soft failure so the UI can show the direct-email fallback.
+        return Response.json({ sent: false, reason: "email_not_configured" });
       },
     },
   },

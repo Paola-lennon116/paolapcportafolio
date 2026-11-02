@@ -230,7 +230,8 @@ function ContactForm({ t, onClose }: { t: (typeof T)["es"]; onClose: () => void 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(parsed.data),
       });
-      setStatus(res.ok ? "ok" : "err");
+      const body = await res.json().catch(() => null);
+      setStatus(res.ok && body?.sent === true ? "ok" : "err");
     } catch {
       setStatus("err");
     }
