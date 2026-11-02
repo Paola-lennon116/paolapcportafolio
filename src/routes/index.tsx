@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, type ReactNode } from "react";
+import { useState, type FormEvent, type ReactNode } from "react";
+import { z } from "zod";
 import perfil from "@/assets/perfil.jpg.asset.json";
 import voluntariado from "@/assets/voluntariado.jpg.asset.json";
 
@@ -18,6 +19,19 @@ export const Route = createFileRoute("/")({
 });
 
 const LINKEDIN = "https://www.linkedin.com/in/juana-paola-palomo-cort%C3%A9s-a890a0210";
+const EMAIL = "palomocortesjpaola@gmail.com";
+
+const contactSchema = z.object({
+  name: z.string().trim().min(1).max(100),
+  email: z.string().trim().email().max(255),
+  message: z.string().trim().min(1).max(1000),
+});
+
+interface Testimonial {
+  name: string;
+  pos: string;
+  text: string;
+}
 
 const T = {
   es: {
@@ -59,11 +73,32 @@ const T = {
     projImg: "Imagen del proyecto",
     go: "Ir a proyectos →",
     lTest: "Testimonios",
-    quote: "“Espacio para un testimonio de un colega, cliente o alumna.”",
-    name: "Nombre",
-    pos: "Cargo · Empresa",
+    testimonials: [
+      {
+        name: "Armando Sebastián Ramírez Jiménez",
+        pos: "Estudiante de maestría en Diseño Electrónico",
+        text: "Persona dedicada a sus estudios y actividades, perseverante y comprometida a obtener el mejor desempeño de lo que hace.",
+      },
+      {
+        name: "Lic. Rosalba Haydee Contreras Díaz",
+        pos: "Gerente General · Stella Waffles and Coffee",
+        text: "La Lic. Rosalba Haydee Contreras Díaz da fe y testimonio de que la ING. Juana Paola Palomo Cortés es una persona profesional y capacitada para realizar trabajos grupales e individuales. En el tiempo que he trabajado con ella, he observado habilidades y cualidades necesarias para desempeñarse en cualquier proyecto. Por sus habilidades y actitudes, la ingeniera Juana Paola Palomo Cortés es proactiva, tiene iniciativa de realizar las cosas, propositiva al dar ideas para un mejor funcionamiento y rendimiento de las cosas. Es una persona organizada, ingeniosa y meticulosa al realizar su trabajo, lo que le permite no solo realizar el trabajo de la mejor manera en tiempo real, sino que también le permite proyectar y analizar futuras oportunidades y desventajas. Es responsable en cuanto a cumplir con horarios y terminar en tiempo y forma el trabajo asignado. Sabe trabajar bajo presión, tanto en forma individual como grupal. Sabe comunicarse y expresar sus ideas. Sin duda alguna es y será un elemento importante en cualquier trabajo que realice. Sin más por el momento me despido deseando un buen día y quedando a sus órdenes para cualquier duda o aclaración con respecto al desempeño de la ING. Juana Paola Palomo Cortés.",
+      },
+    ] as Testimonial[],
+    readMore: "Ver más",
+    close: "Cerrar",
     lContact: "Contacto",
     together: "¿Trabajamos juntos?",
+    writeMe: "Escríbeme un mensaje",
+    formTitle: "Envíame un mensaje",
+    fName: "Nombre",
+    fEmail: "Tu correo electrónico",
+    fMsg: "Mensaje",
+    fSend: "Enviar",
+    fSending: "Enviando…",
+    fOk: "¡Mensaje enviado! Gracias por escribirme.",
+    fErr: "No se pudo enviar por ahora. Escríbeme directo a palomocortesjpaola@gmail.com",
+    fInvalid: "Revisa los campos: nombre y mensaje no pueden estar vacíos y el correo debe ser válido.",
   },
   en: {
     nav: [["perfil", "Profile"], ["habilidades", "Skills"], ["experiencia", "Experience"], ["portafolio", "Portfolio"], ["testimonios", "Testimonials"], ["contacto", "Contact"]],
@@ -104,11 +139,32 @@ const T = {
     projImg: "Project image",
     go: "Go to projects →",
     lTest: "Testimonials",
-    quote: "“Space for a testimonial from a colleague, client or student.”",
-    name: "Name",
-    pos: "Role · Company",
+    testimonials: [
+      {
+        name: "Armando Sebastián Ramírez Jiménez",
+        pos: "Master's student in Electronic Design",
+        text: "A person dedicated to her studies and activities, perseverant and committed to achieving the best performance in everything she does.",
+      },
+      {
+        name: "Lic. Rosalba Haydee Contreras Díaz",
+        pos: "General Manager · Stella Waffles and Coffee",
+        text: "I, Rosalba Haydee Contreras Díaz, hereby attest that Eng. Juana Paola Palomo Cortés is a professional fully capable of carrying out both team and individual work. During the time I have worked with her, I have observed the skills and qualities needed to perform in any project. Thanks to her abilities and attitude, Engineer Juana Paola Palomo Cortés is proactive, takes initiative, and is full of ideas to improve how things work and perform. She is organized, resourceful and meticulous in her work, which allows her not only to deliver the best results in real time, but also to project and analyze future opportunities and drawbacks. She is responsible when it comes to meeting schedules and completing assigned work on time and properly. She knows how to work under pressure, both individually and in a team. She knows how to communicate and express her ideas. Without a doubt, she is and will be a valuable asset in any work she undertakes. I remain at your disposal for any questions or clarification regarding the performance of Eng. Juana Paola Palomo Cortés.",
+      },
+    ] as Testimonial[],
+    readMore: "Read more",
+    close: "Close",
     lContact: "Contact",
     together: "Shall we work together?",
+    writeMe: "Send me a message",
+    formTitle: "Send me a message",
+    fName: "Name",
+    fEmail: "Your email",
+    fMsg: "Message",
+    fSend: "Send",
+    fSending: "Sending…",
+    fOk: "Message sent! Thanks for reaching out.",
+    fErr: "Could not send right now. Please write directly to palomocortesjpaola@gmail.com",
+    fInvalid: "Check the fields: name and message cannot be empty and the email must be valid.",
   },
 };
 
@@ -130,8 +186,96 @@ function ImageSlot({ label, className = "" }: { label: string; className?: strin
   );
 }
 
+function Modal({ onClose, closeLabel, children }: { onClose: () => void; closeLabel: string; children: ReactNode }) {
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-primary/70 p-4 backdrop-blur-sm"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+    >
+      <div
+        className="max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-lg border border-border bg-background p-6 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {children}
+        <button
+          onClick={onClose}
+          className="mt-6 w-full rounded-md border border-primary px-4 py-2 text-sm font-medium transition-colors hover:bg-primary hover:text-primary-foreground"
+        >
+          {closeLabel}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ContactForm({ t, onClose }: { t: (typeof T)["es"]; onClose: () => void }) {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
+  const [status, setStatus] = useState<"idle" | "sending" | "ok" | "err" | "invalid">("idle");
+
+  async function submit(e: FormEvent) {
+    e.preventDefault();
+    const parsed = contactSchema.safeParse({ name, email, message });
+    if (!parsed.success) {
+      setStatus("invalid");
+      return;
+    }
+    setStatus("sending");
+    try {
+      const res = await fetch("/api/public/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(parsed.data),
+      });
+      const body = await res.json().catch(() => null);
+      setStatus(res.ok && body?.sent === true ? "ok" : "err");
+    } catch {
+      setStatus("err");
+    }
+  }
+
+  const inputCls =
+    "w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:border-copper";
+
+  return (
+    <form onSubmit={submit}>
+      <h3 className="mb-4 text-xl font-bold">{t.formTitle}</h3>
+      <label className="mb-3 block text-sm">
+        <span className="mb-1 block font-medium">{t.fName}</span>
+        <input className={inputCls} value={name} onChange={(e) => setName(e.target.value)} maxLength={100} required />
+      </label>
+      <label className="mb-3 block text-sm">
+        <span className="mb-1 block font-medium">{t.fEmail}</span>
+        <input className={inputCls} type="email" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={255} required />
+      </label>
+      <label className="mb-3 block text-sm">
+        <span className="mb-1 block font-medium">{t.fMsg}</span>
+        <textarea className={`${inputCls} min-h-28`} value={message} onChange={(e) => setMessage(e.target.value)} maxLength={1000} required />
+      </label>
+      {status === "invalid" && <p className="mb-3 text-sm text-copper">{t.fInvalid}</p>}
+      {status === "err" && <p className="mb-3 text-sm text-copper">{t.fErr}</p>}
+      {status === "ok" ? (
+        <p className="rounded-md bg-teal/10 p-3 text-sm font-medium text-teal">{t.fOk}</p>
+      ) : (
+        <button
+          type="submit"
+          disabled={status === "sending"}
+          className="w-full rounded-md bg-copper px-4 py-2.5 font-medium text-accent-foreground transition-transform hover:-translate-y-0.5 disabled:opacity-60"
+        >
+          {status === "sending" ? t.fSending : t.fSend}
+        </button>
+      )}
+    </form>
+  );
+}
+
 function Index() {
   const [lang, setLang] = useState<"es" | "en">("es");
+  const [openTest, setOpenTest] = useState<Testimonial | null>(null);
+  const [formOpen, setFormOpen] = useState(false);
   const t = T[lang];
   const toggle = (
     <button
@@ -288,13 +432,23 @@ function Index() {
       <section id="testimonios" className="bg-primary py-20 text-primary-foreground">
         <div className="mx-auto max-w-6xl px-5">
           <Label n="07">{t.lTest}</Label>
-          <div className="grid gap-6 md:grid-cols-3">
-            {[1, 2, 3].map((i) => (
-              <figure key={i} className="rounded-lg border border-ivory/15 p-6">
-                <blockquote className="text-ivory/85">{t.quote}</blockquote>
-                <figcaption className="mt-4 flex items-center gap-3">
-                  <span className="h-10 w-10 rounded-full border border-dashed border-ivory/40" />
-                  <span className="text-sm"><b>{t.name}</b><br /><span className="text-ivory/60">{t.pos}</span></span>
+          <div className="grid gap-6 md:grid-cols-2">
+            {t.testimonials.map((tm) => (
+              <figure key={tm.name} className="flex flex-col rounded-lg border border-ivory/15 p-6">
+                <blockquote className="line-clamp-4 text-ivory/85">{tm.text}</blockquote>
+                {tm.text.length > 220 && (
+                  <button
+                    onClick={() => setOpenTest(tm)}
+                    className="mt-2 self-start font-mono text-xs text-copper underline-offset-4 hover:underline"
+                  >
+                    {t.readMore} →
+                  </button>
+                )}
+                <figcaption className="mt-4 flex items-center gap-3 border-t border-ivory/10 pt-4">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-copper/20 font-display font-bold text-copper">
+                    {tm.name.split(" ").map((w) => w[0]).slice(0, 2).join("")}
+                  </span>
+                  <span className="text-sm"><b>{tm.name}</b><br /><span className="text-ivory/60">{tm.pos}</span></span>
                 </figcaption>
               </figure>
             ))}
@@ -307,7 +461,13 @@ function Index() {
         <Label n="08">{t.lContact}</Label>
         <h2 className="text-3xl font-bold md:text-5xl">{t.together}</h2>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <a href="mailto:palomocortesjpaola@email.com" className="rounded-md bg-copper px-6 py-3 font-medium text-accent-foreground">palomocortesjpaola@email.com</a>
+          <button
+            onClick={() => setFormOpen(true)}
+            className="rounded-md bg-copper px-6 py-3 font-medium text-accent-foreground transition-transform hover:-translate-y-0.5"
+          >
+            {t.writeMe}
+          </button>
+          <a href={`mailto:${EMAIL}`} className="rounded-md border border-primary px-6 py-3 font-medium hover:bg-primary hover:text-primary-foreground">{EMAIL}</a>
           <a href={LINKEDIN} target="_blank" rel="noreferrer" className="rounded-md border border-primary px-6 py-3 font-medium hover:bg-primary hover:text-primary-foreground">LinkedIn</a>
         </div>
       </section>
@@ -315,6 +475,19 @@ function Index() {
       <footer className="border-t border-border py-6 text-center font-mono text-xs text-muted-foreground">
         © 2026 Juana Paola Palomo Cortés
       </footer>
+
+      {openTest && (
+        <Modal onClose={() => setOpenTest(null)} closeLabel={t.close}>
+          <blockquote className="leading-relaxed text-foreground/85">{openTest.text}</blockquote>
+          <p className="mt-4 text-sm"><b>{openTest.name}</b><br /><span className="text-muted-foreground">{openTest.pos}</span></p>
+        </Modal>
+      )}
+
+      {formOpen && (
+        <Modal onClose={() => setFormOpen(false)} closeLabel={t.close}>
+          <ContactForm t={t} onClose={() => setFormOpen(false)} />
+        </Modal>
+      )}
     </div>
   );
 }
